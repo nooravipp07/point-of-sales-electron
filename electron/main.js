@@ -5,17 +5,23 @@ const isDev = process.env.NODE_ENV === 'development';
 
 function createWindow() {
 	const win = new BrowserWindow({
-		icon: iconPath,
-		width: 1200,
-		height: 800,
-		webPreferences: {
-		nodeIntegration: false,
-		contextIsolation: true,
-		preload: path.join(__dirname, 'preload.js'),
+			icon: iconPath,
+			width: 1200,        // fallback size before maximize
+			height: 800,        // fallback size before maximize
+			show: false,        // 👈 hide until ready to avoid white flash
+			webPreferences: {
+			nodeIntegration: false,
+			contextIsolation: true,
+			preload: path.join(__dirname, 'preload.js'),
 		},
 	});
 
-	// Load Vite dev server in dev, or built files in production
+	// 👇 Maximize the window when ready
+	win.once('ready-to-show', () => {
+		win.maximize();
+		win.show();
+	});
+
 	if (isDev) {
 		win.loadURL('http://localhost:5173');
 		win.webContents.openDevTools();

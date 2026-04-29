@@ -25,18 +25,33 @@
     ],
     "win": {
       "target": [
-        { "target": "nsis", "arch": ["x64", "ia32"] }
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        }
       ],
       "icon": "assets/icon.ico"
     },
     "mac": {
       "target": [
-        { "target": "dmg", "arch": ["x64", "arm64"] }
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
       ],
       "icon": "assets/icon.icns"
     },
     "linux": {
-      "target": ["AppImage", "deb"],
+      "target": [
+        "AppImage",
+        "deb"
+      ],
       "icon": "assets/icon.png"
     },
     "nsis": {
@@ -47,11 +62,13 @@
     }
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^2.11.2",
     "clsx": "^2.1.1",
     "framer-motion": "^10.16.4",
     "lucide-react": "^0.383.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-redux": "^9.2.0",
     "tailwind-merge": "^1.14.0"
   },
   "devDependencies": {
