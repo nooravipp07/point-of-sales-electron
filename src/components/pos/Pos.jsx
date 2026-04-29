@@ -23,25 +23,26 @@ import {
     LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { formatNumber } from '../../utils/formatNumber';
 
 // --- Mock Data ---
 const INITIAL_PRODUCTS = [
-	{ id: 1, name: 'Ribeye Steak', price: 34000, discount: 0, unit: 'kg', category: 'Beef', image: 'https://images.unsplash.com/photo-1603048588665-791ca8aea617?auto=format&fit=crop&q=80&w=300', stock: 45.5 },
-	{ id: 2, name: 'Chicken Breast', price: 12.50, discount: 0, unit: 'kg', category: 'Poultry', image: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&q=80&w=300', stock: 30.0 },
-	{ id: 3, name: 'Lamb Chops', price: 18.00, discount: 0, unit: 'kg', category: 'Lamb', image: 'https://images.unsplash.com/photo-1551028150-64b9f398f678?auto=format&fit=crop&q=80&w=300', stock: 15.2 },
-	{ id: 4, name: 'Ground Beef', price: 9.99, discount: 0, unit: 'kg', category: 'Beef', image: 'https://images.unsplash.com/photo-1588168333986-5078d3ae3976?auto=format&fit=crop&q=80&w=300', stock: 60.0 },
-	{ id: 5, name: 'Pork Belly', price: 14.20, discount: 0, unit: 'kg', category: 'Pork', image: 'https://images.unsplash.com/photo-1593030103066-0093718efeb9?auto=format&fit=crop&q=80&w=300', stock: 22.8 },
-	{ id: 6, name: 'Artisan Sausages', price: 8.50, discount: 0, unit: 'kg', category: 'Processed', image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&q=80&w=300', stock: 40 },
-	{ id: 7, name: 'Organic Milk', price: 3.99, discount: 0, unit: 'kg', category: 'Dairy', image: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&q=80&w=300', stock: 25.0 },
-	{ id: 8, name: 'Free-Range Eggs', price: 5.49, discount: 0, unit: 'kg', category: 'Dairy', image: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&q=80&w=300', stock: 35.0 },
-	{ id: 9, name: 'Ribeye Steak', price: 24.99, discount: 0, unit: 'kg', category: 'Beef', image: 'https://images.unsplash.com/photo-1603048588665-791ca8aea617?auto=format&fit=crop&q=80&w=300', stock: 45.5 },
-	{ id: 10, name: 'Chicken Breast', price: 12.50, discount: 0, unit: 'kg', category: 'Poultry', image: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&q=80&w=300', stock: 30.0 },
-	{ id: 11, name: 'Lamb Chops', price: 18.00, discount: 0, unit: 'kg', category: 'Lamb', image: 'https://images.unsplash.com/photo-1551028150-64b9f398f678?auto=format&fit=crop&q=80&w=300', stock: 15.2 },
-	{ id: 12, name: 'Ground Beef', price: 9.99, discount: 0, unit: 'kg', category: 'Beef', image: 'https://images.unsplash.com/photo-1588168333986-5078d3ae3976?auto=format&fit=crop&q=80&w=300', stock: 60.0 },
-	{ id: 13, name: 'Pork Belly', price: 14.20, discount: 0, unit: 'kg', category: 'Pork', image: 'https://images.unsplash.com/photo-1593030103066-0093718efeb9?auto=format&fit=crop&q=80&w=300', stock: 22.8 },
-	{ id: 14, name: 'Artisan Sausages', price: 8.50, discount: 0, unit: 'kg', category: 'Processed', image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&q=80&w=300', stock: 40 },
-	{ id: 15, name: 'Organic Milk', price: 3.99, discount: 0, unit: 'kg', category: 'Dairy', image: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&q=80&w=300', stock: 25.0 },
-	{ id: 16, name: 'Free-Range Eggs', price: 5.49, discount: 0, unit: 'kg', category: 'Dairy', image: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&q=80&w=300', stock: 35.0 },
+	{ id: 1, name: 'KARKAS', price: 29000, discount: 3000, unit: 'kg', category: 'Beef', image: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&q=80&w=300', stock: 45.5 },
+	{ id: 2, name: 'DADA', price: 29000, discount: 3000, unit: 'kg', category: 'Poultry', image: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&q=80&w=300', stock: 30.0 },
+	{ id: 3, name: 'PAHA', price: 29000, discount: 3000, unit: 'kg', category: 'Lamb', image: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&q=80&w=300', stock: 15.2 },
+	{ id: 4, name: 'PAHA ATAS', price: 29000, discount: 3000, unit: 'kg', category: 'Beef', image: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&q=80&w=300', stock: 60.0 },
+	{ id: 5, name: 'PAHA PENTUL', price: 31000, discount: 3000, unit: 'kg', category: 'Pork', image: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&q=80&w=300', stock: 22.8 },
+	{ id: 6, name: 'SAYAP', price: 30000, discount: 0, unit: 'kg', category: 'Processed', image: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&q=80&w=300', stock: 40 },
+	{ id: 7, name: 'KULIT', price: 26000, discount: 0, unit: 'kg', category: 'Dairy', image: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&q=80&w=300', stock: 25.0 },
+	{ id: 8, name: 'TULANG RONGKONG', price: 12000, discount: 0, unit: 'kg', category: 'Dairy', image: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&q=80&w=300', stock: 35.0 },
+	{ id: 9, name: 'TULANG SUPER', price: 20000, discount: 0, unit: 'kg', category: 'Beef', image: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&q=80&w=300', stock: 45.5 },
+	{ id: 10, name: 'TULANG RAWAN', price: 50000, discount: 0, unit: 'kg', category: 'Poultry', image: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&q=80&w=300', stock: 30.0 },
+	{ id: 11, name: 'TULANG PAHA', price: 10000, discount: 0, unit: 'kg', category: 'Lamb', image: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&q=80&w=300', stock: 15.2 },
+	{ id: 12, name: 'TETELAN', price: 22000, discount: 0, unit: 'kg', category: 'Beef', image: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&q=80&w=300', stock: 60.0 },
+	{ id: 13, name: 'FILLET DADA KULIT', price: 39000, discount: 0, unit: 'kg', category: 'Pork', image: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&q=80&w=300', stock: 22.8 },
+	{ id: 14, name: 'FILLET DADA BERSIH', price: 41000, discount: 0, unit: 'kg', category: 'Processed', image: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&q=80&w=300', stock: 40 },
+	{ id: 15, name: 'FILLET PAHA KULIT', price: 39000, discount: 0, unit: 'kg', category: 'Dairy', image: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&q=80&w=300', stock: 25.0 },
+	{ id: 16, name: 'FILLET PAHA BERSIH', price: 41000, discount: 0, unit: 'kg', category: 'Dairy', image: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&q=80&w=300', stock: 35.0 },
 ];
 
 const customers = ['Walk-in Customer', 'Budi Santoso', 'Siti Rahma', 'Ahmad Fauzi'];
@@ -87,10 +88,13 @@ const ProductCard = ({ product, onAdd }) => (
 		</div>
 		<h3 className="font-semibold text-gray-900 mb-1">{product.name}</h3>
 		<div className="flex items-center justify-between">
-			<span className="text-lg font-bold text-black">{product.price.toFixed(2)}</span>
+			<span className="text-lg font-bold text-black">{formatNumber(product.price)}</span>
 			<div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-black group-hover:text-white transition-colors">
 				<Plus size={16} />
 			</div>
+		</div>
+		<div className="flex items-center justify-between">
+			<span className="text-[10px] text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded-lg">Discount {formatNumber(product.discount)} / Kg</span>
 		</div>
 	</motion.div>
 );
@@ -108,7 +112,7 @@ const CartItem = ({ item, onUpdate, onRemove, onSetQuantity }) => (
 		</div>
 		<div className="flex-1 min-w-0">
 			<h4 className="font-semibold text-sm text-gray-900 truncate">{item.name}</h4>
-			<p className="text-xs text-gray-500">{item.price.toFixed(2)} / {item.unit}</p>
+			<p className="text-xs text-gray-500">{formatNumber(item.price)} / {item.unit}</p>
 		</div>
 		<div className="flex items-center gap-2">
 			<div className="flex items-center bg-white border border-gray-200 rounded-xl p-1 shadow-sm">
@@ -172,7 +176,7 @@ export default function Pos() {
 		return {
 			subtotal,
 			tax,
-			total: subtotal + tax
+			total: subtotal
 		};
 	}, [cart]);
 
@@ -240,7 +244,7 @@ export default function Pos() {
 		<div className="flex h-screen bg-[#FBFBFB] text-black font-sans selection:bg-black selection:text-white overflow-hidden">
 			{/* Sidebar */}
 			<aside className="w-20 flex flex-col items-center py-8 border-r border-gray-100 bg-white">
-				<div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center text-white font-bold text-xl mb-12 shadow-xl shadow-black/20">B</div>
+				<div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center text-white font-bold text-xl mb-12 shadow-xl shadow-black/20">P</div>
 				<nav className="flex-1 flex flex-col gap-6">
 					<SidebarItem 
 						active={activeTab === 'pos'} 
@@ -248,12 +252,12 @@ export default function Pos() {
 						label="POS" 
 						onClick={() => setActiveTab('pos')} 
 					/>
-					<SidebarItem 
+					{/* <SidebarItem 
 						active={activeTab === 'inventory'} 
 						icon={Package} 
 						label="Inventory" 
 						onClick={() => setActiveTab('inventory')} 
-					/>
+					/> */}
 					{/* <SidebarItem 
 						active={activeTab === 'history'} 
 						icon={History} 
@@ -337,7 +341,7 @@ export default function Pos() {
 												onChange={(e) => setBranch(e.target.value)}
 												className="appearance-none pl-9 pr-8 py-2.5 text-sm bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-black/10 text-gray-700 cursor-pointer min-w-44"
 											>
-											<option value="">Select Branch</option>
+											<option value="">Select Store</option>
 												{branches.map((b) => (
 													<option key={b} value={b}>{b}</option>
 												))}
@@ -371,7 +375,7 @@ export default function Pos() {
 							</header>
 
 							<div className="flex-1 overflow-y-auto p-8 pt-4">
-								<div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+								<div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
 									{filteredProducts.map(product => (
 										<ProductCard key={product.id} product={product} onAdd={addToCart} />
 									))}
@@ -387,7 +391,7 @@ export default function Pos() {
 										Current Order
 									</h2>
 									<span className="text-xs font-medium text-gray-400 bg-gray-50 px-2 py-1 rounded-lg">
-										#ORD-8291
+										#
 									</span>
 								</div>
 							</div>
@@ -424,7 +428,7 @@ export default function Pos() {
 								<div className="space-y-2">
 									<div className="flex justify-between text-sm text-gray-500">
 										<span>Subtotal</span>
-										<span>{totals.subtotal.toFixed(2)}</span>
+										<span>{formatNumber(totals.subtotal)}</span>
 									</div>
 									<div className="flex justify-between text-sm text-gray-500">
 										<span>Total Discount</span>
@@ -436,7 +440,7 @@ export default function Pos() {
 									</div>
 									<div className="flex justify-between text-xl font-bold pt-2 border-t border-gray-200">
 										<span>Total</span>
-										<span>{totals.total.toFixed(2)}</span>
+										<span>{formatNumber(totals.total)}</span>
 									</div>
 								</div>
 
