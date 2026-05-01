@@ -81,8 +81,27 @@ ipcMain.handle('get-usb-printers', async () => {
 ipcMain.handle('print-receipt', async (event, receiptData) => {
   return new Promise((resolve, reject) => {
 
+    // Check escpos loaded
     if (!escpos) {
-      return reject('Printer module not loaded. Run: npm install escpos escpos-usb');
+      return reject('escpos module not loaded. Run: npm install escpos escpos-usb then npx electron-rebuild');
+    }
+
+    // Check USB class exists
+    if (!escpos.USB) {
+      return reject('escpos.USB not found. Run: npm install escpos-usb then npx electron-rebuild');
+    }
+
+    // Check printer connected
+    let devices = [];
+    try {
+      devices = escpos.USB.findPrinter();
+      console.log('Found USB printers:', devices.length);
+    } catch (findErr) {
+      return reject(`Cannot scan USB devices: ${findErr.message}. Try running as Administrator or install WinUSB via Zadig.`);
+    }
+
+    if (devices.length === 0) {
+      return reject('No USB printer found. Check: (1) USB cable connected, (2) Printer is ON, (3) Run Zadig to install WinUSB driver.');
     }
 
     try {

@@ -2,6 +2,17 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
 import { 
+    addToCart,
+    updateQuantity,
+    setQuantity,
+    removeFromCart,
+    setPaymentMethod,
+    clearCart,
+    setCustomer,
+    setBranch,
+    setButcher,
+} from '../../store/slices/cartSlice';
+import { 
     LayoutDashboard, 
     Package, 
     History, 
@@ -25,6 +36,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatNumber, mround } from '../../utils/formatNumber';
 import { usePrint } from '../../hooks/usePrint';
+import CheckoutModal from './CheckoutModal';
 
 // --- Mock Data ---
 const INITIAL_PRODUCTS = [
@@ -173,21 +185,21 @@ const CartItem = ({ item, onUpdate, onRemove, onSetQuantity }) => {
 // --- Main App ---
 export default function Pos() {
 	const { printReceipt } = usePrint();
+	const reduxDispatch = useDispatch();
+	const user = useSelector((state) => state.auth.user);
+	const cart = useSelector((state) => state.cart.items);
+	const customer = useSelector((state) => state.cart.customer);
+	const branch = useSelector((state) => state.cart.branch);
+	const butcher = useSelector((state) => state.cart.butcher);
+
 	const [activeTab, setActiveTab] = useState('pos');
 	const [products, setProducts] = useState(INITIAL_PRODUCTS);
-	const [cart, setCart] = useState([]);
 	const [searchQuery, setSearchQuery] = useState('');
 	const [isCheckingOut, setIsCheckingOut] = useState(false);
 	const [salesHistory, setSalesHistory] = useState([]);
+	const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
-    const dispatch = useDispatch();
-    const user = useSelector((state) => state.auth.user);
-
-	const [customer, setCustomer] = useState('');
-	const [branch, setBranch] = useState('');
-	const [butcher, setButcher] = useState('');
 	const totalCash = 4750000;
-
 	const searchRef = useRef(null);
 
 	useEffect(() => {
@@ -201,7 +213,7 @@ export default function Pos() {
 			switch (e.key) {
 				case "F1":
 					e.preventDefault();
-					searchRef.current?.focus();   // 👈 match the ref name
+					searchRef.current?.focus();
 					break;
 
 				default:
@@ -227,47 +239,28 @@ export default function Pos() {
 		return { subtotal, totalDiscount, total };
 	}, [cart]);
 
-	const addToCart = (product) => {
-		setCart(prev => {
-			const existing = prev.find(item => item.id === product.id);
-			if (existing) {
-				return prev.map(item => 
-				item.id === product.id 
-					? { ...item, quantity: item.quantity + (product.unit === 'kg' ? 0.5 : 1) }
-					: item
-				);
-			}
-		return [...prev, { ...product, quantity: product.unit === 'kg' ? 0.5 : 1 }];
-		});
+	const handleAddToCart = (product) => {
+		reduxDispatch(addToCart(product));
 	};
 
-	const updateQuantity = (id, delta) => {
-		setCart(prev => prev.map(item => {
-			if (item.id === id) {
-				const newQty = Math.max(0.1, item.quantity + delta);
-				return { ...item, quantity: newQty };
-			}
-			return item;
-		}));
+	const handleUpdateQuantity = (id, delta) => {
+		reduxDispatch(updateQuantity({ id, delta }));
 	};
 
-	const setQuantity = (id, value) => {
-		const numValue = parseFloat(value);
-		if (isNaN(numValue)) return;
-		
-		setCart(prev => prev.map(item => {
-			if (item.id === id) {
-				return { ...item, quantity: Math.max(0, numValue) };
-			}
-			return item;
-		}));
+	const handleSetQuantity = (id, value) => {
+		reduxDispatch(setQuantity({ id, quantity: value }));
 	};
 
-	const removeFromCart = (id) => {
-		setCart(prev => prev.filter(item => item.id !== id));
+	const handleRemoveFromCart = (id) => {
+		reduxDispatch(removeFromCart(id));
 	};
 
-	const handleCheckout = async () => {
+	const handleCheckoutClick = () => {
+		if (cart.length === 0) return;
+		setShowCheckoutModal(true);
+	};
+
+	const handleConfirmCheckout = async (checkoutData) => {
 		if (cart.length === 0) return;
 		setIsCheckingOut(true);
 
@@ -277,6 +270,12 @@ export default function Pos() {
 			customer      : customer   || 'Walk-in',
 			branch        : branch     || '-',
 			butcher       : butcher    || '-',
+			paymentMethod : checkoutData.paymentMethod,
+			orderMethod   : checkoutData.orderMethod,
+			serviceMethod : checkoutData.serviceMethod,
+			notes         : checkoutData.notes,
+			cashReceived  : checkoutData.cashReceived,
+			cashChange    : checkoutData.cashChange,
 			date          : new Date().toLocaleString('id-ID'),
 			items         : cart,
 			subtotal      : totals.subtotal,
@@ -288,17 +287,21 @@ export default function Pos() {
 			await printReceipt(receiptData);
 
 			const newSale = {
-				id    : `ORD-${Math.floor(Math.random() * 10000)}`,
-				date  : new Date().toLocaleString(),
-				items : [...cart],
-				total : totals.total,
+				id            : `ORD-${Math.floor(Math.random() * 10000)}`,
+				date          : new Date().toLocaleString(),
+				items         : [...cart],
+				total         : totals.total,
+				paymentMethod : checkoutData.paymentMethod,
+				orderMethod   : checkoutData.orderMethod,
+				serviceMethod : checkoutData.serviceMethod,
+				notes         : checkoutData.notes,
+				cashReceived  : checkoutData.cashReceived,
+				cashChange    : checkoutData.cashChange,
 			};
 
 			setSalesHistory([newSale, ...salesHistory]);
-			setCart([]);
-			setCustomer('');
-			setBranch('');
-			setButcher('');
+			reduxDispatch(clearCart());
+			setShowCheckoutModal(false);
 
 		} catch (err) {
 			console.error('Checkout error:', err);
@@ -331,7 +334,7 @@ export default function Pos() {
 					<SidebarItem 
                         icon={LogOut} 
                         label="Logout" 
-                        onClick={() => dispatch(logout())}
+                        onClick={() => reduxDispatch(logout())}
                     />
 				</div>
 			</aside>
@@ -361,7 +364,7 @@ export default function Pos() {
 											</div>
 											<select
 												value={butcher}
-												onChange={(e) => setButcher(e.target.value)}
+												onChange={(e) => reduxDispatch(setButcher(e.target.value))}
 												className="appearance-none pl-9 pr-8 py-2.5 text-sm bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-black/10 text-gray-700 cursor-pointer min-w-44"
 											>
 											<option value="">Select Butcheries</option>
@@ -379,7 +382,7 @@ export default function Pos() {
 											</div>
 											<select
 												value={customer}
-												onChange={(e) => setCustomer(e.target.value)}
+												onChange={(e) => reduxDispatch(setCustomer(e.target.value))}
 												className="appearance-none pl-9 pr-8 py-2.5 text-sm bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-black/10 text-gray-700 cursor-pointer min-w-44"
 											>
 											<option value="">Select Customer</option>
@@ -397,7 +400,7 @@ export default function Pos() {
 											</div>
 											<select
 												value={branch}
-												onChange={(e) => setBranch(e.target.value)}
+												onChange={(e) => reduxDispatch(setBranch(e.target.value))}
 												className="appearance-none pl-9 pr-8 py-2.5 text-sm bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-black/10 text-gray-700 cursor-pointer min-w-44"
 											>
 											<option value="">Select Store</option>
@@ -428,7 +431,7 @@ export default function Pos() {
 							<div className="flex-1 overflow-y-auto p-8 pt-4">
 								<div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
 									{filteredProducts.map(product => (
-										<ProductCard key={product.id} product={product} onAdd={addToCart} />
+										<ProductCard key={product.id} product={product} onAdd={handleAddToCart} />
 									))}
 								</div>
 							</div>
@@ -466,9 +469,9 @@ export default function Pos() {
 											<CartItem 
 												key={item.id} 
 												item={item} 
-												onUpdate={updateQuantity} 
-												onRemove={removeFromCart} 
-												onSetQuantity={setQuantity}
+												onUpdate={handleUpdateQuantity} 
+												onRemove={handleRemoveFromCart} 
+												onSetQuantity={handleSetQuantity}
 											/>
                                         ))
                                     )}
@@ -497,7 +500,7 @@ export default function Pos() {
 
 								<button 
 									disabled={cart.length === 0 || isCheckingOut}
-									onClick={handleCheckout}
+									onClick={handleCheckoutClick}
 									className="w-full bg-black text-white py-4 rounded-2xl font-bold text-lg shadow-xl shadow-black/10 hover:bg-zinc-800 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
 								>
 								{isCheckingOut ? (
@@ -510,6 +513,15 @@ export default function Pos() {
 						</div>
 					</>
 				)}
+
+				<CheckoutModal 
+					isOpen={showCheckoutModal}
+					cartItems={cart}
+					totals={totals}
+					onConfirm={handleConfirmCheckout}
+					onCancel={() => setShowCheckoutModal(false)}
+					isLoading={isCheckingOut}
+				/>
 
 				{activeTab === 'inventory' && (
 				<div className="flex-1 p-12 overflow-y-auto">
