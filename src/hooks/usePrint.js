@@ -27,5 +27,19 @@ export function usePrint() {
         }
     };
 
-    return { printReceipt, getUsbPrinters };
+    const testPrint = async (printerName) => {
+        if (!window.electronAPI?.testPrint) {
+            alert('Test print only available in desktop app.');
+            return false;
+        }
+        try {
+            const result = await window.electronAPI.testPrint(printerName);
+            return result?.success ?? false;
+        } catch (err) {
+            console.error('Test print failed:', err);
+            throw err;
+        }
+    };
+
+    return { printReceipt, getUsbPrinters, testPrint };
 }

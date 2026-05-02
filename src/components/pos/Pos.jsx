@@ -37,6 +37,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { formatNumber, mround } from '../../utils/formatNumber';
 import { usePrint } from '../../hooks/usePrint';
 import CheckoutModal from './CheckoutModal';
+import PrinterSettings from '../PrinterSettings';
 
 // --- Mock Data ---
 const INITIAL_PRODUCTS = [
@@ -588,19 +589,17 @@ export default function Pos() {
 				</div>
 				)}
 
-				{activeTab == 'settings' && (
-				<div className="flex-1 p-12 overflow-y-auto">
-					<div className="flex justify-between items-end mb-12">
+				{activeTab === 'settings' && (
+					<div className="flex-1 p-12 overflow-y-auto">
+						<div className="flex justify-between items-end mb-12">
 						<div>
 							<h1 className="text-4xl font-bold tracking-tight">Settings</h1>
 							<p className="text-gray-500 mt-2">Manage your settings</p>
 						</div>
-					</div>
+						</div>
 
-					<div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-						
+						<PrinterSettings />
 					</div>
-				</div>
 				)}
 			</main>
 		</div>

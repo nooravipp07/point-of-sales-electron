@@ -9,4 +9,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
 	// print
 	printReceipt:   (data) => ipcRenderer.invoke('print-receipt', data),
 	getUsbPrinters: ()     => ipcRenderer.invoke('get-usb-printers'),
+	testPrint:      (name) => ipcRenderer.invoke('test-print', name),
 });
