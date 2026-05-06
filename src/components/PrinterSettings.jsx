@@ -12,6 +12,7 @@ export default function PrinterSettings() {
     const [testStatus, setTestStatus]       = useState(null); // 'success' | 'error' | null
     const [testMessage, setTestMessage]     = useState('');
     const [scanError, setScanError]         = useState('');
+    const [showDebug, setShowDebug]         = useState(false);
 
     // Scan on mount
     useEffect(() => {
@@ -25,38 +26,48 @@ export default function PrinterSettings() {
         try {
             const found = await getUsbPrinters();
             setPrinters(found);
-        if (found.length === 0) {
-            setScanError('No USB printer found. Check cable and make sure WinUSB driver is installed via Zadig.');
-        }
+            if (found.length === 0) {
+                setScanError('No USB printer found. Check cable and make sure WinUSB driver is installed via Zadig.');
+            }
         } catch (err) {
-            setScanError('Failed to scan printers: ' + err);
+            const errorMsg = err?.toString ? err.toString() : String(err);
+            setScanError(`Failed to scan printers: ${errorMsg}`);
+            console.error('Scan error:', err);
         } finally {
             setScanning(false);
         }
     };
 
     const handleSelect = (printer) => {
-        const key = `${printer.vendorId}:${printer.productId}`;
+        const key = printer.name || `${printer.vendorId}:${printer.productId}`;
         setSelected(key);
         localStorage.setItem('selectedPrinter', key);
         setTestStatus(null);
     };
 
     const handleTest = async () => {
-        if (!selectedPrinter) {
-            alert('Please select a printer first.');
-            return;
-        }
         setTesting(true);
         setTestStatus(null);
         setTestMessage('');
         try {
-        await testPrint(selectedPrinter);
-            setTestStatus('success');
-            setTestMessage('Test print successful! Check your printer.');
+            const result = await testPrint(selectedPrinter);
+            
+            if (result?.cancelled) {
+                console.log('Test print cancelled by user');
+                setTestStatus(null);
+                setTestMessage('');
+            } else if (result?.success) {
+                setTestStatus('success');
+                setTestMessage('Test print sent! Check your printer.');
+            } else {
+                setTestStatus('error');
+                setTestMessage('Test print failed. Try again.');
+            }
         } catch (err) {
             setTestStatus('error');
-            setTestMessage(err?.toString() || 'Test print failed.');
+            const errorMsg = err?.toString ? err.toString() : String(err);
+            setTestMessage(errorMsg || 'Test print failed.');
+            console.error('Test print error:', err);
         } finally {
             setTesting(false);
         }
@@ -108,7 +119,7 @@ export default function PrinterSettings() {
 
           {/* Printer items */}
           {printers.map((printer, index) => {
-            const key       = `${printer.vendorId}:${printer.productId}`;
+            const key       = printer.name || `${printer.vendorId}:${printer.productId}`;
             const isActive  = selectedPrinter === key;
 
             return (
@@ -127,10 +138,10 @@ export default function PrinterSettings() {
                   </div>
                   <div>
                     <p className="text-sm font-semibold">
-                      USB Printer #{index + 1}
+                      {printer.displayName || printer.name || `Printer #${index + 1}`}
                     </p>
                     <p className={`text-xs mt-0.5 ${isActive ? 'text-white/60' : 'text-gray-400'}`}>
-                      VID: {printer.vendorId} · PID: {printer.productId}
+                      {printer.status || 'Ready'} • {printer.manufacturer || 'Windows Printer'}
                     </p>
                   </div>
                 </div>
@@ -190,11 +201,11 @@ export default function PrinterSettings() {
         <p className="text-sm font-semibold text-gray-700">Printer not showing up?</p>
         <ol className="space-y-2">
           {[
-            'Make sure the USB cable is connected and printer is ON',
-            'Download Zadig from zadig.akeo.ie',
-            'Open Zadig → Options → List All Devices',
-            'Select your CODESHOP printer → Set driver to WinUSB → Replace Driver',
-            'Restart the app and click Scan again',
+            'Make sure the printer is connected to your computer',
+            'Ensure the printer is powered ON',
+            'Check Windows Settings → Devices → Printers & Scanners',
+            'Add the printer if not listed (click "Add a device")',
+            'Click Scan button to refresh the printer list',
           ].map((step, i) => (
             <li key={i} className="flex items-start gap-3 text-sm text-gray-500">
               <span className="w-5 h-5 rounded-full bg-gray-200 text-gray-600 text-xs flex items-center justify-center flex-shrink-0 mt-0.5 font-semibold">
@@ -206,6 +217,42 @@ export default function PrinterSettings() {
         </ol>
       </div>
 
+      {/* Debug Info */}
+      <div className="bg-gray-100 rounded-3xl border border-gray-200 overflow-hidden">
+        <button
+          onClick={() => setShowDebug(!showDebug)}
+          className="w-full flex items-center justify-between px-8 py-4 hover:bg-gray-200 transition-colors"
+        >
+          <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Debug Info</p>
+          <span className={`text-gray-500 transition-transform ${showDebug ? 'rotate-180' : ''}`}>
+            ▼
+          </span>
+        </button>
+        {showDebug && (
+          <div className="px-8 py-4 bg-white border-t border-gray-200 space-y-2">
+            <p className="text-xs text-gray-600">
+              <span className="font-semibold">Electron API Available:</span> {window.electronAPI ? 'Yes' : 'No'}
+            </p>
+            <p className="text-xs text-gray-600">
+              <span className="font-semibold">Printers Detected:</span> {printers.length}
+            </p>
+            {printers.length > 0 && (
+              <div className="bg-gray-50 p-3 rounded text-xs text-gray-700 font-mono max-h-40 overflow-y-auto">
+                {printers.map((p, i) => (
+                  <div key={i} className="text-gray-600">
+                    [{i}] {p.manufacturer || 'Unknown'} {p.product || 'Unknown'} (VID: {p.vendorId}, PID: {p.productId})
+                  </div>
+                ))}
+              </div>
+            )}
+            {scanError && (
+              <p className="text-xs text-red-600 bg-red-50 p-2 rounded">
+                <span className="font-semibold">Last Scan Error:</span> {scanError}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

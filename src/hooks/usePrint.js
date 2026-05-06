@@ -4,16 +4,16 @@ export function usePrint() {
         if (!window.electronAPI?.printReceipt) {
             console.warn('Electron print API not available');
             alert('Printer only available in the desktop app.');
-            return false;
+            return { success: false };
         }
 
         try {
             const result = await window.electronAPI.printReceipt(receiptData);
-            return result?.success ?? false;
+            return result || { success: false };
         } catch (err) {
             console.error('Print failed:', err);
             alert('Gagal print: ' + err);
-            return false;
+            return { success: false };
         }
     };
 
@@ -30,11 +30,11 @@ export function usePrint() {
     const testPrint = async (printerName) => {
         if (!window.electronAPI?.testPrint) {
             alert('Test print only available in desktop app.');
-            return false;
+            return { success: false };
         }
         try {
             const result = await window.electronAPI.testPrint(printerName);
-            return result?.success ?? false;
+            return result || { success: false };
         } catch (err) {
             console.error('Test print failed:', err);
             throw err;

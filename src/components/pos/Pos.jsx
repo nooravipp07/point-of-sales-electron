@@ -285,28 +285,33 @@ export default function Pos() {
 		};
 
 		try {
-			await printReceipt(receiptData);
+			const result = await printReceipt(receiptData);
+			
+			// Only proceed if print was successful (not cancelled)
+			if (result && !result.cancelled) {
+				const newSale = {
+					id            : `ORD-${Math.floor(Math.random() * 10000)}`,
+					date          : new Date().toLocaleString(),
+					items         : [...cart],
+					total         : totals.total,
+					paymentMethod : checkoutData.paymentMethod,
+					orderMethod   : checkoutData.orderMethod,
+					serviceMethod : checkoutData.serviceMethod,
+					notes         : checkoutData.notes,
+					cashReceived  : checkoutData.cashReceived,
+					cashChange    : checkoutData.cashChange,
+				};
 
-			const newSale = {
-				id            : `ORD-${Math.floor(Math.random() * 10000)}`,
-				date          : new Date().toLocaleString(),
-				items         : [...cart],
-				total         : totals.total,
-				paymentMethod : checkoutData.paymentMethod,
-				orderMethod   : checkoutData.orderMethod,
-				serviceMethod : checkoutData.serviceMethod,
-				notes         : checkoutData.notes,
-				cashReceived  : checkoutData.cashReceived,
-				cashChange    : checkoutData.cashChange,
-			};
-
-			setSalesHistory([newSale, ...salesHistory]);
-			reduxDispatch(clearCart());
-			setShowCheckoutModal(false);
-
+				setSalesHistory([newSale, ...salesHistory]);
+				reduxDispatch(clearCart());
+				setShowCheckoutModal(false);
+			} else if (result?.cancelled) {
+				// User cancelled print dialog
+				console.log('Print dialog was cancelled');
+			}
 		} catch (err) {
 			console.error('Checkout error:', err);
-			alert('Checkout failed: ' + err);
+			alert('Print failed: ' + err);
 		} finally {
 			setIsCheckingOut(false);
 		}
