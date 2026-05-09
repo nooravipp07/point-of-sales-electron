@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, protocol } = require('electron');
 const path = require('path');
 const { exec } = require('child_process');
 const fs = require('fs');
@@ -20,6 +20,7 @@ function createWindow() {
 			nodeIntegration: false,
 			contextIsolation: true,
 			preload: path.join(__dirname, 'preload.js'),
+			sandbox: true,
 		},
 	});
 
@@ -32,7 +33,10 @@ function createWindow() {
 		win.loadURL('http://localhost:5173');
 		win.webContents.openDevTools();
 	} else {
-		win.loadFile(path.join(__dirname, '../dist/index.html'));
+		// Load from ASAR using loadFile - most reliable approach
+		const indexPath = path.join(__dirname, '../dist/index.html');
+		console.log('Loading from:', indexPath);
+		win.loadFile(indexPath);
 	}
 }
 
