@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { login } from '../../store/slices/authSlice';
+import { loginStart, loginSuccess, loginFailure } from '../../store/slices/authSlice';
+import AuthService from '../../services/AuthService';
 
 export default function Login() {
 
@@ -8,15 +9,31 @@ export default function Login() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError(null);
+        dispatch(loginStart());
         setLoading(true);
 
-        setTimeout(() => {
-            dispatch(login({ name: username })); // ✅ this triggers Redux
+        try {
+            // Panggil API login
+            const result = await AuthService.login(username, password);
+            
+            // Simpan user ke Redux
+            dispatch(loginSuccess(result.user));
+            
+            // Mulai auto-refresh token
+            AuthService.startAutoRefresh();
+        } catch (err) {
+            console.error('Login error:', err);
+            const errorMessage = err?.message || 'Login gagal, silakan coba lagi';
+            setError(errorMessage);
+            dispatch(loginFailure(errorMessage));
+        } finally {
             setLoading(false);
-        }, 2000);
+        }
     };
 
     return (
@@ -29,18 +46,27 @@ export default function Login() {
                     <h1 className="text-lg font-semibold text-gray-900 mb-1">Welcome back</h1>
                     <p className="text-sm text-gray-400 mb-8">Sign in to Priyadis POS</p>
 
+                    {/* Error Message */}
+                    {error && (
+                        <div className="mb-5 p-3 rounded-lg bg-red-50 border border-red-200">
+                            <p className="text-sm text-red-700">{error}</p>
+                        </div>
+                    )}
+
                     {/* Form */}
                     <form onSubmit={handleSubmit} className="space-y-5">
 
-                        {/* Email */}
+                        {/* Name/Username */}
                         <div>
-                            <label className="block text-xs text-gray-400 mb-1.5">Username</label>
+                            <label className="block text-xs text-gray-400 mb-1.5">Name</label>
                             <input
                                 type="text"
                                 required
+                                disabled={loading}
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
-                                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-gray-400 transition-all"
+                                placeholder="Enter your name"
+                                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-gray-400 transition-all disabled:bg-gray-50 disabled:cursor-not-allowed"
                             />
                         </div>
 
@@ -50,9 +76,10 @@ export default function Login() {
                             <input
                                 type="password"
                                 required
+                                disabled={loading}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-gray-400 transition-all"
+                                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-gray-400 transition-all disabled:bg-gray-50 disabled:cursor-not-allowed"
                             />
                         </div>
 

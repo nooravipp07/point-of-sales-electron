@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { logout } from '../../store/slices/authSlice';
+import useAuth from '../../hooks/useAuth';
 import { 
     addToCart,
     updateQuantity,
@@ -186,6 +186,7 @@ const CartItem = ({ item, onUpdate, onRemove, onSetQuantity }) => {
 // --- Main App ---
 export default function Pos() {
 	const { printReceipt } = usePrint();
+	const { logout: handleLogout } = useAuth();
 	const reduxDispatch = useDispatch();
 	const user = useSelector((state) => state.auth.user);
 	const cart = useSelector((state) => state.cart.items);
@@ -340,7 +341,7 @@ export default function Pos() {
 					<SidebarItem 
                         icon={LogOut} 
                         label="Logout" 
-                        onClick={() => reduxDispatch(logout())}
+                        onClick={handleLogout}
                     />
 				</div>
 			</aside>
